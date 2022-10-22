@@ -5,8 +5,8 @@
 #include "measurements.h"
 #include "properties.h"
 
-#include <string>
 #include <map>
+#include <string>
 
 namespace benchmark {
 
@@ -15,10 +15,11 @@ class DBFactory {
   using DBCreator = DB *(*)();
   static bool RegisterDB(std::string db_name, DBCreator db_creator);
   static DB *CreateDB(utils::Properties *props, Measurements *measurements);
+
  private:
   static std::map<std::string, DBCreator> &Registry();
 };
 
-} // benchmark
+}  // namespace benchmark
 
-#endif // DB_FACTORY_H_
+#endif  // DB_FACTORY_H_

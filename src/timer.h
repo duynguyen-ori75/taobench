@@ -10,20 +10,18 @@ namespace benchmark {
 
 namespace utils {
 
- // returns number of nanoseconds since epoch
+// returns number of nanoseconds since epoch
 int64_t CurrentTimeNanos();
 
 template <typename R, typename P = std::ratio<1>>
 class Timer {
  public:
-  void Start() {
-    time_ = Clock::now();
-  }
+  void Start() { time_ = Clock::now(); }
 
   R End() {
     Duration span;
     Clock::time_point t = Clock::now();
-    span = std::chrono::duration_cast<Duration>(t - time_);
+    span                = std::chrono::duration_cast<Duration>(t - time_);
     return span.count();
   }
 
@@ -34,13 +32,13 @@ class Timer {
 
  private:
   using Duration = std::chrono::duration<R, P>;
-  using Clock = std::chrono::high_resolution_clock;
+  using Clock    = std::chrono::high_resolution_clock;
 
   Clock::time_point time_;
 };
 
-} // utils
+}  // namespace utils
 
-} // benchmark
+}  // namespace benchmark
 
-#endif // TIMER_H_
+#endif  // TIMER_H_

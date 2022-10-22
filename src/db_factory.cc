@@ -3,7 +3,6 @@
 
 namespace benchmark {
 
-
 std::map<std::string, DBFactory::DBCreator> &DBFactory::Registry() {
   static std::map<std::string, DBCreator> registry;
   return registry;
@@ -15,8 +14,8 @@ bool DBFactory::RegisterDB(std::string db_name, DBCreator db_creator) {
 }
 
 DB *DBFactory::CreateDB(utils::Properties *props, Measurements *measurements) {
-  std::string db_name = props->GetProperty("dbname", "test");
-  DB *db = nullptr;
+  std::string db_name                        = props->GetProperty("dbname", "test");
+  DB *db                                     = nullptr;
   std::map<std::string, DBCreator> &registry = Registry();
   if (registry.find(db_name) != registry.end()) {
     DB *new_db = (*registry[db_name])();
@@ -27,4 +26,4 @@ DB *DBFactory::CreateDB(utils::Properties *props, Measurements *measurements) {
   return db;
 }
 
-} // benchmark
+}  // namespace benchmark

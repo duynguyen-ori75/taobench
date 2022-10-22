@@ -1,29 +1,30 @@
 #ifndef WORKLOAD_H_
 #define WORKLOAD_H_
 
-#include <vector>
-#include <string>
 #include <chrono>
-#include <ctime>
 #include <climits>
+#include <ctime>
+#include <string>
 #include <thread>
+#include <vector>
 #include "db.h"
-#include "timer.h"
-#include "properties.h"
-#include "utils.h"
-#include "parse_config.h"
-#include "workload_loader.h"
 #include "edge.h"
+#include "parse_config.h"
+#include "properties.h"
+#include "timer.h"
+#include "utils.h"
+#include "workload_loader.h"
 
 namespace benchmark {
 namespace rnd {
-  thread_local static std::mt19937 gen(std::random_device{}());
-  thread_local static std::independent_bits_engine<std::default_random_engine,
-        CHAR_BIT, unsigned char> byte_engine;
-}
+thread_local static std::mt19937 gen(std::random_device{}());
+thread_local static std::independent_bits_engine<std::default_random_engine, CHAR_BIT,
+                                                 unsigned char>
+  byte_engine;
+}  // namespace rnd
 
 namespace counter {
-  thread_local static uint32_t key_count(std::uniform_int_distribution<>(0)(rnd::gen));
+thread_local static uint32_t key_count(std::uniform_int_distribution<>(0)(rnd::gen));
 }
 
 class Workload {
@@ -39,14 +40,14 @@ class Workload {
 };
 
 class TraceGeneratorWorkload : public Workload {
-public:
-
+ public:
   // This constructor is used for the batch insert phase.
   TraceGeneratorWorkload(const utils::Properties &p);
 
-  // This constructor is used in the run phase; we combine the workload keypools loaded by each loader.
+  // This constructor is used in the run phase; we combine the workload keypools loaded by
+  // each loader.
   TraceGeneratorWorkload(const utils::Properties &p,
-                         std::vector<std::shared_ptr<WorkloadLoader>> const & loaders);
+                         std::vector<std::shared_ptr<WorkloadLoader>> const &loaders);
 
   void Init(DB &db) override;
 
@@ -56,25 +57,20 @@ public:
 
   long GetNumLoadedEdges();
 
-private:
-
+ private:
   // Deprecated
-  void LoadToBuffers(DB& db, std::string const & primary_key,
-                     std::string const & remote_key,
-                     std::string const & edge_type,
-                     std::string const & timestamp,
-                     std::string const & value);
+  void LoadToBuffers(DB &db, std::string const &primary_key,
+                     std::string const &remote_key, std::string const &edge_type,
+                     std::string const &timestamp, std::string const &value);
 
-public:
-
+ public:
   int LoadRow(WorkloadLoader &loader, int write_batch_size);
 
   static int64_t GetShardStartKey(int spreader);
-  
+
   static int64_t GetShardEndKey(int spreader);
 
-private:
-
+ private:
   Status DispatchRequest(DB &db);
 
   int64_t GenerateKey(int shard);
@@ -87,7 +83,7 @@ private:
 
   std::string GetRandomWriteOperationType(bool is_txn_op);
 
-  Edge const & GetRandomEdge();
+  Edge const &GetRandomEdge();
 
   std::string GetValue();
 
@@ -105,6 +101,6 @@ private:
   std::unordered_map<int, std::vector<Edge>> const shard_to_edges;
 };
 
-} // benchmark
+}  // namespace benchmark
 
-#endif // WORKLOAD_H_
+#endif  // WORKLOAD_H_

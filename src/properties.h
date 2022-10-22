@@ -1,10 +1,10 @@
 #ifndef PROPERTIES_H_
 #define PROPERTIES_H_
 
-#include <string>
-#include <map>
-#include <fstream>
 #include <cassert>
+#include <fstream>
+#include <map>
+#include <string>
 
 #include "utils.h"
 
@@ -20,6 +20,7 @@ class Properties {
   void SetProperty(const std::string &key, const std::string &value);
   bool ContainsKey(const std::string &key) const;
   void Load(std::ifstream &input);
+
  private:
   std::map<std::string, std::string> properties_;
 };
@@ -47,9 +48,7 @@ inline bool Properties::ContainsKey(const std::string &key) const {
 }
 
 inline void Properties::Load(std::ifstream &input) {
-  if (!input.is_open()) {
-    throw utils::Exception("File not open!");
-  }
+  if (!input.is_open()) { throw utils::Exception("File not open!"); }
 
   while (!input.eof() && !input.bad()) {
     std::string line;
@@ -61,8 +60,8 @@ inline void Properties::Load(std::ifstream &input) {
   }
 }
 
-} // utils
+}  // namespace utils
 
-} // benchmark
+}  // namespace benchmark
 
-#endif // PROPERTIES_H_
+#endif  // PROPERTIES_H_

@@ -1,19 +1,23 @@
-#pragma once
+// #pragma once
 
 #include <iostream>
 #include <mutex>
-#include <pqxx/pqxx>
 #include <string>
-#include <vector>
 #include "db.h"
 #include "db_factory.h"
+#include "google/cloud/spanner/client.h"
 #include "properties.h"
 #include "timer.h"
 
 namespace benchmark {
 
-class YugabyteDB : public DB {
+namespace spanner = ::google::cloud::spanner;
+using ::google::cloud::StatusOr;
+
+class SpannerDB : public DB {
  public:
+  SpannerDB() {}
+
   void Init();
 
   void Cleanup();
@@ -47,47 +51,21 @@ class YugabyteDB : public DB {
                    std::vector<std::vector<DB::Field>> &key_buffer);
 
  private:
-  pqxx::connection *ysql_conn_;
-  std::mutex mu_;
-  std::string object_table_;
-  std::string edge_table_;
+  struct ConnectorInfo {
+    ConnectorInfo(utils::Properties const &props);
 
-  /* Helper functions to execute the prepared statements done in Init */
-  pqxx::result DoRead(pqxx::transaction_base &tx, DataTable table,
-                      const std::vector<Field> &key);
+    spanner::Client client;
+  };
 
-  pqxx::result DoUpdate(pqxx::transaction_base &tx, DataTable table,
-                        const std::vector<Field> &key, TimestampValue const &value);
-
-  pqxx::result DoInsert(pqxx::transaction_base &tx, DataTable table,
-                        const std::vector<Field> &key, const TimestampValue &timeval);
-
-  pqxx::result DoDelete(pqxx::transaction_base &tx, DataTable table,
-                        const std::vector<Field> &key, const TimestampValue &timeval);
+  ConnectorInfo *info;
 
   Status BatchInsertObjects(DataTable table, const std::vector<std::vector<Field>> &keys,
                             const std::vector<TimestampValue> &timevals);
 
   Status BatchInsertEdges(DataTable table, const std::vector<std::vector<Field>> &keys,
                           const std::vector<TimestampValue> &timevals);
-
-  Status ExecuteTransactionPrepared(const std::vector<DB_Operation> &operations,
-                                    std::vector<TimestampValue> &results, bool read_only);
-
-  Status ExecuteTransactionBatch(const std::vector<DB_Operation> &operations,
-                                 std::vector<TimestampValue> &results, bool read_only);
-
-  std::string ReadBatchQuery(const std::vector<DB_Operation> &read_ops);
-
-  std::string ScanBatchQuery(const std::vector<DB_Operation> &scan_ops);
-
-  std::string InsertBatchQuery(const std::vector<DB_Operation> &insert_ops);
-
-  std::string UpdateBatchQuery(const std::vector<DB_Operation> &update_ops);
-
-  std::string DeleteBatchQuery(const std::vector<DB_Operation> &delete_ops);
 };
 
-DB *NewYugabyteDB();
+DB *NewMySqlDB();
 
 }  // namespace benchmark
