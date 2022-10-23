@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.7)
 project(taobench)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_COMPILER "g++-11")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
@@ -46,13 +45,13 @@ if(WITH_YUGABYTE)
 endif()
 
 if(WITH_WIREDTIGER)
-  target_sources(taobench PRIVATE wiredtiger/wt_db.h wiredtiger/wt_db.cc)
+  target_sources(taobench PRIVATE wiredtigerdb/wt_db.h wiredtigerdb/wt_db.cc)
   target_link_libraries(taobench wiredtiger)
 endif()
 
 set(UTILS_DIR "${CMAKE_SOURCE_DIR}/utils")
 string(CONCAT BUILD_FORMAT_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/src,"
-              "${CMAKE_CURRENT_SOURCE_DIR}/wiredtiger,"
+              "${CMAKE_CURRENT_SOURCE_DIR}/wiredtigerdb,"
               "${CMAKE_CURRENT_SOURCE_DIR}/crdb,"
               "${CMAKE_CURRENT_SOURCE_DIR}/mysqldb,"
               "${CMAKE_CURRENT_SOURCE_DIR}/spannerdb,"
@@ -61,9 +60,9 @@ string(CONCAT BUILD_FORMAT_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/src,"
 # clang-format
 find_program(CLANG_FORMAT_BIN NAMES clang-format clang-format-14)
 if("${CLANG_FORMAT_BIN}" STREQUAL "CLANG_FORMAT_BIN-NOTFOUND")
-  message(WARNING "LeanStore couldn't find clang-format.")
+  message(WARNING "Couldn't find clang-format.")
 else()
-  message(STATUS "LeanStore found clang-format at ${CLANG_FORMAT_BIN}")
+  message(STATUS "Clang-format found at ${CLANG_FORMAT_BIN}")
 endif()
 
 # Runs clang format and updates files in place.

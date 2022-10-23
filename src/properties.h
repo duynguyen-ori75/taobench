@@ -3,8 +3,8 @@
 
 #include <cassert>
 #include <fstream>
-#include <map>
 #include <string>
+#include <unordered_map>
 
 #include "utils.h"
 
@@ -18,16 +18,17 @@ class Properties {
                           const std::string &default_value = std::string()) const;
   const std::string &operator[](const std::string &key) const;
   void SetProperty(const std::string &key, const std::string &value);
+  int UnsetProperty(const std::string &key);
   bool ContainsKey(const std::string &key) const;
   void Load(std::ifstream &input);
 
  private:
-  std::map<std::string, std::string> properties_;
+  std::unordered_map<std::string, std::string> properties_;
 };
 
 inline std::string Properties::GetProperty(const std::string &key,
                                            const std::string &default_value) const {
-  std::map<std::string, std::string>::const_iterator it = properties_.find(key);
+  std::unordered_map<std::string, std::string>::const_iterator it = properties_.find(key);
   if (properties_.end() == it) {
     return default_value;
   } else {
@@ -41,6 +42,10 @@ inline const std::string &Properties::operator[](const std::string &key) const {
 
 inline void Properties::SetProperty(const std::string &key, const std::string &value) {
   properties_[key] = value;
+}
+
+inline int Properties::UnsetProperty(const std::string &key) {
+  return properties_.erase(key);
 }
 
 inline bool Properties::ContainsKey(const std::string &key) const {

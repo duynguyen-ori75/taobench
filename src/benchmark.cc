@@ -249,7 +249,9 @@ void RunTransactions(benchmark::utils::Properties &props) {
 
   // initialize DBs for batch reads
   std::vector<benchmark::DB *> dbs;
+  props.SetProperty("initialize_db", "true");
   for (int i = 0; i < num_threads; i++) {
+    if (i > 0) { props.UnsetProperty("initialize_db"); }
     benchmark::DB *db = benchmark::DBFactory::CreateDB(&props, &measurements);
     if (db == nullptr) {
       std::cerr << "Unknown database name " << props["dbname"] << std::endl;
