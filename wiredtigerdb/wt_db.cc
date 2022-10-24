@@ -21,19 +21,17 @@ void WiredTigerDB::Init() {
   // create 2 tables if not exist
   if (props.ContainsKey("initialize_db")) {
     to_clean_up_ = true;
-    ret          = session->create(session, "table:objects",
-                                   "key_format=r,"
-                                            "value_format=Qs150,"
-                                            "columns=(id,timestamp,value)");
+    ret          = session->create(session, WiredTigerDB::object_table_,
+                                   "key_format=r,value_format=Qs150,columns=(id,timestamp,value)");
     error_check(ret);
 
-    ret = session->create(session, "table:edges",
-                          "key_format=r,"
-                          "value_format=rrbQs150,"
-                          "columns=(id,id1,id2,type,timestamp,value)");
+    ret = session->create(session, WiredTigerDB::edge_table_,
+                          "key_format=r,value_format=rrbQs150,"
+                          "columns=(rid,id1,id2,type,timestamp,value)");
     error_check(ret);
 
-    ret = session->create(session, "index:edges:relationship", "columns=(id1,id2,type)");
+    ret =
+      session->create(session, WiredTigerDB::edge_index_, "columns=(id1,id2,type,rid)");
     error_check(ret);
   }
 }
@@ -48,6 +46,63 @@ void WiredTigerDB::Cleanup() {
 // TODO(Duy): Implement all of the below functions
 Status WiredTigerDB::Read(DataTable table, const std::vector<Field> &key,
                           std::vector<TimestampValue> &buffer) {
+  // Initialize table & cursor
+  WT_CURSOR *cursor;
+  int exact;
+  uint64_t timestamp;
+  const char *value = NULL;
+  auto table_name =
+    (table == DataTable::Edges) ? WiredTigerDB::edge_index_ : WiredTigerDB::object_table_;
+  auto ret = session->open_cursor(session, table_name, NULL, NULL, &cursor);
+
+  // Begin transaction before running read
+  session->begin_transaction(session, "isolation=snapshot");
+
+  // Prepare key for searching
+  if (table == DataTable::Objects) {
+    assert(key.size() == 1);
+    cursor->set_key(cursor, key[0].value);
+  } else {
+    assert(table == DataTable::Edges);
+    assert(key.size() == 3);
+    assert(key[0].name == "id1");
+    assert(key[1].name == "id2");
+    assert(key[2].name == "type");
+    cursor->set_key(cursor, key[0].value, key[1].value, key[2].value);
+  }
+
+  // Search ops
+  ret = cursor->search_near(cursor, &exact);
+  assert(ret == WT_SUCCESS);
+
+  if (exact != 0) {
+    std::cout << "Read Miss: No Key Found" << std::endl;
+    session->rollback_transaction(session, NULL);
+    return Status::kNotFound;
+  }
+
+  // Extract value form edge index
+  if (table == DataTable::Edges) {
+    uint64_t id1, id2, rid;
+    int32_t type;
+    cursor->get_value(cursor, &id1, &id2, &type, &rid);
+    cursor->close(cursor);
+    cursor = NULL;
+
+    session->open_cursor(session, WiredTigerDB::edge_table_, NULL, NULL, &cursor);
+    cursor->set_key(cursor, rid);
+    ret = cursor->search_near(cursor, &exact);
+    assert(ret == WT_SUCCESS);
+    if (exact != 0) {
+      std::cout << "Read Miss: No Key Found" << std::endl;
+      session->rollback_transaction(session, NULL);
+      return Status::kNotFound;
+    }
+  }
+
+  cursor->get_value(cursor, &timestamp, &value);
+  buffer.emplace_back(timestamp, value);
+  session->commit_transaction(session, NULL);
   return Status::kOK;
 }
 

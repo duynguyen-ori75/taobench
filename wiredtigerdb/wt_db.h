@@ -16,6 +16,8 @@
     raise(SIGTRAP);                                   \
   }
 
+#define WT_SUCCESS 0
+
 namespace benchmark {
 
 class WiredTigerDB : public DB {
@@ -58,11 +60,11 @@ class WiredTigerDB : public DB {
  private:
   bool to_clean_up_;
   std::string db_path_;
-  static constexpr std::string_view object_table_ = "table:objects";
-  static constexpr std::string_view edge_table_   = "table:edges";
+  static constexpr char object_table_[] = "table:objects";
+  static constexpr char edge_table_[]   = "table:edges";
+  static constexpr char edge_index_[]   = "index:edges:relationship";
   WT_CONNECTION *conn;
   WT_SESSION *session;
-  WT_CURSOR *cursor[20];
 
   /**
     pqxx::result
